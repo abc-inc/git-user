@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+function fatal() {
+  echo "$@" >&2
+  exit 1
+}
+
+function usage() {
+  fatal "Usage:$(basename "$0") <command> [<options>]
+
+Commands:
+  add EMAIL NAME    Add a new user or update the name, if it already exists
+  get               Get the current user
+  help              Display this help and exit
+  list              List all users
+  remove EMAIL      Remove a user
+  set [EMAIL]       Switch to a user
+  unset             Unset the user for this repository
+"
+}
+
+[[ "$* " != *" --help "* && "$* " != *" -h "* ]] || usage
+
+case "${1:-}" in
+  add)
+    [[ $# -eq 3 && -n "${2:-}" && -n "${3:-}" ]] || usage
+    git config --global "users.$2.name" "$3"
+    git config --global "users.$2.email" "$2"
+    ;;
+
+  get)
+    if ! name="$(git config "user.name")" ||
+      ! email="$(git config "user.email")"; then
+      fatal "User is not set."
+    fi
+    echo "${name} <${email}>"
+    ;;
+
+  list)
+    git config --global --get-regexp 'users\..*\.name' |
+      sed -E 's/users\.(.*)\.name (.*)/\2 <\1>/' | sort -f
+    ;;
+
+  remove)
+    [[ $# -eq 2 && -n "${2:-}" ]] || usage
+    git config --global --remove "users.$2"
+    ;;
+
+  set | "")
+    if [[ -z "${2:-}" ]] && command -v fzf &>/dev/null; then
+      msg=" (current: $("$0" get 2>/dev/null))" || msg=""
+      msg="Select user${msg}:"
+      if ! sel="$("$0" list | fzf -i --tac --info hidden --header "${msg}" -1 -0)" ||
+        [[ -z "${sel:-}" ]]; then
+        fatal "Cannot select user."
+      fi
+      sel="${sel#*<}"
+      sel="${sel%>*}"
+      exec "$0" set "${sel}"
+    elif [[ -z "${2:-}" ]]; then
+      usage
+    fi
+
+    if ! name="$(git config --global "users.$2.name")" ||
+      ! email="$(git config --global "users.$2.email")"; then
+      fatal "Cannot set user '$2'."
+    fi
+    echo "Setting user to ${name} <${email}>"
+    git config user.name "${name}"
+    git config user.email "${email}"
+    ;;
+
+  unset)
+    git config --remove-section user
+    ;;
+
+  *)
+    usage
+    ;;
+esac
