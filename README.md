@@ -19,16 +19,16 @@ git user set john.doe@acme.org
 # and user.email to john.doe@acme.org
 ```
 
-If [fzf](https://github.com/junegunn/fzf) is installed, the user can be selected interactively by using the cursor keys as well as typing a substring:
+If [gum](https://github.com/charmbracelet/gum) or [fzf](https://github.com/junegunn/fzf) is installed,
+then the user can be selected interactively by using the cursor keys:
 
 ```text
 git user set
 # displays the following prompt
 
-> John Doe <jdoe@private.local>
-  John DOE <john.doe@acme.org>
-  Select user (current: John DOE <john.doe@acme.org>):
-> █
+Select user (current: John DOE <john.doe@acme.org>):
+  John Doe <jdoe@private.local>
+> John DOE <john.doe@acme.org>
 ```
 
 ## Implementation Details
@@ -46,7 +46,8 @@ users.jdoe@private.local.email jdoe@private.local
 ```
 
 By default, the global Git configuration is stored in `${HOME}/.gitconfig` e.g.,
-```text
+
+```ini
 [core]
         autocrlf = false
 ...
@@ -60,7 +61,7 @@ By default, the global Git configuration is stored in `${HOME}/.gitconfig` e.g.,
 
 ## Alternatives
 
-Incomplete list of similar tools (ordered by stars in descending order, as of December 2020):
+Incomplete list of similar tools (ordered by stars in descending order, as of January 2023):
 
 * https://github.com/geongeorge/Git-User-Switch
 * https://github.com/matsuyoshi30/gitsu
@@ -68,7 +69,7 @@ Incomplete list of similar tools (ordered by stars in descending order, as of De
 * https://github.com/gesquive/git-user
 * https://github.com/forthedamn/gitum
 * https://github.com/WindomZ/gituser.js
-* https://github.com/WindomZ/gituser
 * https://github.com/krnsk0/guser
-* https://github.com/timo-cmd/glitter
 * https://github.com/spenserblack/change-git-user
+* https://github.com/WindomZ/gituser
+* https://github.com/timo-cmd/glitter

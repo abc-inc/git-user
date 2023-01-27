@@ -7,7 +7,7 @@ function fatal() {
 }
 
 function usage() {
-  fatal "Usage:$(basename "$0") <command> [<options>]
+  fatal "Usage: $(basename "$0") <command> [<options>]
 
 Commands:
   add EMAIL NAME    Add a new user or update the name, if it already exists
@@ -48,18 +48,27 @@ case "${1:-}" in
     ;;
 
   set | "")
-    if [[ -z "${2:-}" ]] && command -v fzf &>/dev/null; then
-      msg=" (current: $("$0" get 2>/dev/null))" || msg=""
-      msg="Select user${msg}:"
-      if ! sel="$("$0" list | fzf -i --tac --info hidden --header "${msg}" -1 -0)" ||
-        [[ -z "${sel:-}" ]]; then
+    if [[ -z "${2:-}" ]]; then
+      [[ -t 0 ]] || usage
+
+      msg="Select user"
+      ! curr="$("$0" get 2>/dev/null)" || msg="${msg} (current: ${curr})"
+
+      if command -v gum &>/dev/null; then
+        echo "${msg}:"
+        cmd=(gum choose --selected "${curr:-}" --cursor.foreground 001)
+      elif command -v fzf &>/dev/null; then
+        cmd=(fzf -i --tac --cycle --info hidden --header "${msg}:" --select-1 --exit-0)
+      else
+        usage
+      fi
+
+      if ! sel="$("$0" list | "${cmd[@]}")" || [[ -z "${sel:-}" ]]; then
         fatal "Cannot select user."
       fi
       sel="${sel#*<}"
       sel="${sel%>*}"
       exec "$0" set "${sel}"
-    elif [[ -z "${2:-}" ]]; then
-      usage
     fi
 
     if ! name="$(git config --global "users.$2.name")" ||
